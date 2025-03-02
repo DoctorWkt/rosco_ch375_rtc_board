@@ -2,7 +2,7 @@
 
 This repository contains the design and sample code for an expansion
 board that suits the [rosco-m68k r2 SBC](https://rosco-m68k.com/).
-It support three options:
+It supports three options:
 
  - a CH375 interface to a USB block device (e.g. USB key, USB drive),
  - an I2C interface to a DS1302 real-time clock (RTC), and
@@ -10,8 +10,8 @@ It support three options:
 
 You will find the KiCaD 8 PCB design in the [kicad](kicad) folder, the
 GALasm code for the two ATF22V10 GALs in the [pld](pld) folder, and some
-example software to drive the CH375 and DS1302 in the [software](software)
-folder.
+example software to drive the CH375 and DS1302 modules in the
+[software](software) folder.
 
 If you want the CH375 interface, you will need to burn and install GAL 1.
 If you want the expansion RAM, you will beed to burn and install GAL 2.
@@ -71,15 +71,15 @@ You can copy both folders into the `code/software` folder of your copy
 of the [rosco_m68k](https://github.com/rosco-m68k/rosco_m68k) GitHub
 repository.
 
-The `ch375test` program initialises the CH375 device, reads the first
-block from the USB block device, then overwrites this block.
-The code for the CH375 is mostly in C. I've also written the block
-read/write code in assembly for speed. You may want to look at
+The `ch375test` program initialises the CH375 device, reads block zero
+from the USB block device, then overwrites block one.
+The code for the CH375 is mostly in C. Elsewhere, I've rewritten the block
+read/write code in assembly for speed: you may want to look at
 [that version](https://github.com/EtchedPixels/FUZIX/blob/master/Kernel/platform/platform-rosco-r2/p68000.S) for ideas.
 
 The `ds1302test` program reads the time and date from the DS1302 module,
 prints it out and asks if you want to set the time. If you say yes, then
-you can type in a new date and time, and the program will update the
+you can type in a new date and time and the program will update the
 DS1302 module.
 
 ## Datasheets
