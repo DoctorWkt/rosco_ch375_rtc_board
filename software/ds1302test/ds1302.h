@@ -1,0 +1,16 @@
+// Defines for the DS1302 registers
+
+#define RTC_SECONDS 0x80
+#define RTC_MINUTES 0x82
+#define RTC_HOURS   0x84
+#define RTC_DAYS    0x86
+#define RTC_MONTHS  0x88
+#define RTC_YEARS   0x8C
+#define RTC_WRPROT  0x8E
+
+#define RTC_RDSECONDS RTC_SECONDS+1
+#define RTC_RDMINUTES RTC_MINUTES+1
+#define RTC_RDHOURS   RTC_HOURS+1
+#define RTC_RDDAYS    RTC_DAYS+1
+#define RTC_RDMONTHS  RTC_MONTHS+1
+#define RTC_RDYEARS   RTC_YEARS+1

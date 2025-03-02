@@ -1,0 +1,120 @@
+// GAL logic. (c) 2025 Warren Toomey, GPL3
+//
+// This file contains the logic for both the GALs in the design. The
+// logic for the DS1302 RTC needs to be split across both GALs as we
+// need two registers and they have different reset conditions.
+//
+// This file gets run through the C pre-processor to create the
+// separate GAL logic files.
+
+#ifdef GAL1
+GAL22V10
+GALCHIP1
+
+// Pins 1 - 12
+AS A2   A3 A12 A13   A14    A15 A16 A17 A18   A19 GND
+A1 CHCS WR RW  DTACK RTCCE FC2  FC1 FC0 IOSEL VPA VCC
+// Pins 13 - 24
+
+#else	// GAL2
+GAL22V10
+GALCHIP2
+
+// Pins 1 - 12
+AS UDS  LDS   RW    EXPSEL A14   A15    A16   A17    A18   A19   GND
+A1 D0IN D0OUT ERAM1 ORAM1  DTACK RTCOUT RTCIN RTCCLK IOSEL RTCCE VCC
+// Pins 13 - 24
+
+#endif
+
+/////////////////
+// CH375 Logic //
+/////////////////
+
+#ifdef GAL1
+// Write enable (active low) is RW inverted
+//
+WR= !RW
+
+// CH375 chip select (active low): IOSEL, AS low,
+// A12..A19 high which means addresses 0xFFF000 to 0xFFFFFF,
+// a valid address on the address bus and data on D0..D8.
+//
+!CHCS= !IOSEL & !AS & A19 & A18 & A17 & A16 & A15 & A14 & A13 & A12
+
+// When CHCS is low, DTACK is low. Otherwise it is high-Z.
+//
+DTACK.T= GND
+DTACK.E= !CHCS
+
+// When the CPU acknowledges our interrupt, we drop VPA.
+// This happens when FC0/1/2 are high, AS is low and A3/2/1
+// hold the number 5 (IRQ 5).
+//
+VPA.T = GND
+VPA.E = FC0 & FC1 & FC2 & !AS & A3 & !A2 & A1
+#endif
+
+/////////////////////
+// REAL TIME CLOCK //
+/////////////////////
+
+// We are decoding a large range of addresses,
+// but three example address that could be used are:
+//  0xF78001	- turn off the RTC clock
+//  0xF78003	- turn on the RTC clock, read/write a bit
+//  0xF7C001	- turn off the RTC chip enable
+//  0xF7C003	- turn on the RTC chip enable
+
+// I2CSEL is the minimal logic to select the I2C device
+#define I2CSEL !IOSEL & !A19 & A18 & A17 & A16 & A15
+
+#ifdef GAL1
+// Set or reset the chip enable when I2CSEL and A14 high, and a write.
+// If A1 high, turn on chip enable. If A1 low, turn off chip enable.
+//
+AR =      I2CSEL & A14 & !RW & !A1
+RTCCE.R = I2CSEL & A14 & !RW &  A1
+        + RTCCE
+
+DESCRIPTION
+#endif
+
+#ifdef GAL2
+// RTC CLK. Enable it when I2CSEL, A14 low, A1 high.
+// Disable it when I2CSEL, A14 low, A1 low.
+//
+AR =       I2CSEL & !A14 & !A1
+RTCCLK.R = I2CSEL & !A14 &  A1
+         + RTCCLK
+
+// RTC data output is enabled when A14 is low and RW low.
+// It tracks the D0IN value.
+// Otherwise it is high-Z.
+//
+RTCOUT.T = D0IN
+RTCOUT.E = I2CSEL & !A14 & !AS & !RW
+
+// RTC data input:
+// D0OUT tracks RTCIN when A14 is low and RW high.
+// Otherwise it is high-Z.
+//
+D0OUT.T = RTCIN
+D0OUT.E = I2CSEL & !A14 & !AS & RW
+
+// We acknowledge RTC I/O when as is low.
+DTACK.T = GND
+DTACK.E = I2CSEL & !AS
+
+///////////////////
+// EXPANSION RAM //
+///////////////////
+
+// The odd  address RAM is selected when both EXPSEL and LDS are low.
+// The even address RAM is selected when both EXPSEL and UDS are low.
+//
+!ORAM1= !EXPSEL & !LDS
+!ERAM1= !EXPSEL & !UDS
+
+DESCRIPTION
+#endif

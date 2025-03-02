@@ -1,0 +1,6 @@
+RCS
+*.kicad_*
+ch375_board-backups
+fp-info-cache
+library
+sym-lib-table
